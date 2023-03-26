@@ -13,6 +13,8 @@ else
 CFLAGS += -O2
 endif
 
+.PHONY: all clean
+
 all: $(ELF) $(SHADEROBJ)
 	@echo done
 

@@ -10,7 +10,7 @@
 
 #include"filemap.h"
 
-#define CNT 1024
+#define CNT 512
 
 int
 main (void)
@@ -19,7 +19,7 @@ main (void)
   VkPhysicalDevice phydev;
   VkDevice device;
   VkQueue queue;
-  int qfam;
+  uint32_t qfam;
   device = create_device_and_queue (instance, &phydev, &queue, &qfam);
 
   VkBuffer buf;
@@ -35,15 +35,20 @@ main (void)
   if (vkMapMemory (device, devmem, 0, sizeof (float) * CNT, 0, (void**)&mapaddr) != VK_SUCCESS)
     errx (-1, "(%s) failed to map memory\n", __FUNCTION__);
   memcpy (mapaddr, data, sizeof (float) * CNT);
+
   vkUnmapMemory (device, devmem);
 //end input data to ..,
   VkDescriptorSetLayout desc_set_layout;
   desc_set_layout = create_descriptor_set_layout (device, 1, (uint32_t[1]){0});
 
+  VkDescriptorPool pool;
+  pool = create_descriptor_pool (device, 1);
   VkDescriptorSet desc_set;
-  desc_set = create_descriptor_set (device, &desc_set_layout);
+  desc_set = create_descriptor_set (device, pool, &desc_set_layout);
 
-  add_buffer_to_descriptor_set (device, desc_set, 1, (VkBuffer[1]){buf}, (size_t[1]){sizeof (float) * CNT} , (int[1]){0});
+//  add_buffer_to_descriptor_set (device, desc_set, 1, (VkBuffer[1]){buf}, (size_t[1]){sizeof (float) * CNT} , (int[1]){0});
+
+  descriptor_set_bind (device, desc_set, buf, sizeof (float) * CNT, 0);
 
   VkCommandPool commandpool;
   commandpool = create_command_pool (device, qfam);
@@ -65,10 +70,21 @@ main (void)
 
   record_command_buffer (cmdbuf, ppl_lay, pipeline, 0, 1, &desc_set, (int[3]){CNT/256,1,1});
 
-  sleep (1);
+
+  {
+    VkSubmitInfo si = {};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &cmdbuf;
+    si.waitSemaphoreCount = 0;
+    si.signalSemaphoreCount = 0;
+    if (vkQueueSubmit (queue, 1, &si, VK_NULL_HANDLE) != VK_SUCCESS)
+      errx (-1, "failed to submit command buffer\n");
+  }
+
   if (vkQueueWaitIdle (queue) != VK_SUCCESS)
     errx (-1, "vkQueueWaitIdle\n");
-  sleep (1);
+
 //start print ...
 //
   memset (data, 0, sizeof (float) * CNT);

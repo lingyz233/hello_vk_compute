@@ -47,6 +47,12 @@ create_device_and_queue (VkInstance instance, VkPhysicalDevice * pphy_dev, VkQue
 
   VkPhysicalDeviceFeatures dev_features = {0};
 
+  VkPhysicalDeviceProperties props; 
+  vkGetPhysicalDeviceProperties(phy_dev, &props);
+  printf("pick device %s (v:0x%x, d:0x%x)\n",
+    props.deviceName, props.vendorID, props.deviceID);
+
+
   VkDeviceCreateInfo create_info = {};
   create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   create_info.pQueueCreateInfos = &queue_ci;
@@ -57,7 +63,9 @@ create_device_and_queue (VkInstance instance, VkPhysicalDevice * pphy_dev, VkQue
   if (__enable_validation_layer__)
   {
     create_info.enabledLayerCount = 1;
-	create_info.ppEnabledLayerNames = &validation_layer_name;
+    create_info.ppEnabledLayerNames = &validation_layer_name;
+//    create_info.enabledLayerCount = 2;
+//    create_info.ppEnabledLayerNames = (const char*const*){validation_layer_name,"VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME"};
 	fprintf (stderr, "using validation layer to create logical device\n");
   }
   else

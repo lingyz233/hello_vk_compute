@@ -15,8 +15,11 @@ create_compute_pipeline (VkDevice dev, VkShaderModule shader, int sl_count, VkDe
 VkDescriptorSetLayout
 create_descriptor_set_layout (VkDevice dev, int binding_count, uint32_t binding[binding_count]);
 
+VkDescriptorPool
+create_descriptor_pool (VkDevice dev, uint32_t size);
+
 VkDescriptorSet
-create_descriptor_set (VkDevice dev, VkDescriptorSetLayout * pds_layout);
+create_descriptor_set (VkDevice dev, VkDescriptorPool pool, VkDescriptorSetLayout * pds_layout);
 
 void
 add_buffer_to_descriptor_set (VkDevice dev, VkDescriptorSet dstset, int n, VkBuffer buf[n], size_t bufsize[n], int binding[n]);
@@ -31,5 +34,13 @@ void
 record_command_buffer (VkCommandBuffer cmd_buf,
   VkPipelineLayout ppl_layout, VkPipeline pipeline, int first_set,
   uint32_t set_cnt, VkDescriptorSet * pds, int dispatch[3]);
+
+
+
+void descriptor_set_bind(VkDevice dev, VkDescriptorSet dstset,
+                                VkBuffer buffer,
+                                VkDeviceSize size,
+                                uint32_t binding);
+
 
 #endif
