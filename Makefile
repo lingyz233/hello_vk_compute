@@ -22,9 +22,6 @@ $(SHADEROBJ): %.spv : %.glsl
 $(ELF): $(OBJ)
 	gcc $^ -o $@ ./libfilemap.so -lvulkan
 
-debug:
-	$(eval CFLAGS+=-DDEBUG)
-
 $(OBJ): %.o : %.c
 	gcc -c $^ $(CFLAGS)
 
