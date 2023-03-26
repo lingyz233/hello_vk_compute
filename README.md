@@ -49,3 +49,6 @@ however it outputs:
 ```
 0.0 	1.0 	2.0 	3.0 	4.0 	5.0 	6.0 	7.0 	8.0 	9.0 	10.0 	11.0 	12.0  ...
 ```
+which is not the hoped output
+
+compile to debug version with `make dbg=1`. I have checked that it runs without any error with the validation layer.
