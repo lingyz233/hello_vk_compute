@@ -14,8 +14,6 @@ create_shader_module (VkDevice device, char * pcode, size_t size)
   VkShaderModule shader_module;
   if (vkCreateShaderModule (device, &smci, NULL, &shader_module) != VK_SUCCESS)
     errx (-1, "(my)failed to create shader module\n");
-  else
-    warnx ("(my) shader module created");
 
   return shader_module;
 }

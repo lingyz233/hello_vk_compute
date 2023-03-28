@@ -49,7 +49,7 @@ create_device_and_queue (VkInstance instance, VkPhysicalDevice * pphy_dev, VkQue
 
   VkPhysicalDeviceProperties props; 
   vkGetPhysicalDeviceProperties(phy_dev, &props);
-  printf("pick device %s (v:0x%x, d:0x%x)\n",
+  printf("%s (id %x:%x)\n",
     props.deviceName, props.vendorID, props.deviceID);
 
 
@@ -82,7 +82,7 @@ create_device_and_queue (VkInstance instance, VkPhysicalDevice * pphy_dev, VkQue
     fprintf (stderr, "failed to create logical device\n");
 	return VK_NULL_HANDLE;
   }
-  else
+  else if (__enable_validation_layer__)
   {
     fprintf (stderr, "successfully creating logical device\n");
   }

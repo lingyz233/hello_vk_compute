@@ -79,7 +79,7 @@ create_instance ()
   int result = vkCreateInstance (&createInfo, NULL, &instance);
   if (result != VK_SUCCESS)
     errx (-1, "failed to create vk instance : result : %d\n", result);
-  else
+  else if (__enable_validation_layer__)
     fprintf (stderr, "succesfully creating vk instance !\n");
   return instance;
 }

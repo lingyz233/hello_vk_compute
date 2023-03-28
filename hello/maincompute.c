@@ -10,7 +10,7 @@
 
 #include"filemap.h"
 
-#define CNT 512
+#define CNT (1024)
 
 int
 main (void)
@@ -26,10 +26,10 @@ main (void)
   buf = prepare_buffer (device, CNT*sizeof(float));
   VkDeviceMemory devmem;
   devmem = alloc_bind_memory (device, phydev, buf);
-//start input data ...
+
   float * data = malloc (sizeof (float) * CNT);
   for (int i = 0; i < CNT; i++)
-    data[i] = i;
+    data[i] = i / 12.;
 
   float * mapaddr;
   if (vkMapMemory (device, devmem, 0, sizeof (float) * CNT, 0, (void**)&mapaddr) != VK_SUCCESS)
@@ -37,7 +37,7 @@ main (void)
   memcpy (mapaddr, data, sizeof (float) * CNT);
 
   vkUnmapMemory (device, devmem);
-//end input data to ..,
+
   VkDescriptorSetLayout desc_set_layout;
   desc_set_layout = create_descriptor_set_layout (device, 1, (uint32_t[1]){0});
 
@@ -45,25 +45,25 @@ main (void)
   pool = create_descriptor_pool (device, 1);
   VkDescriptorSet desc_set;
   desc_set = create_descriptor_set (device, pool, &desc_set_layout);
-
-//  add_buffer_to_descriptor_set (device, desc_set, 1, (VkBuffer[1]){buf}, (size_t[1]){sizeof (float) * CNT} , (int[1]){0});
-
   descriptor_set_bind (device, desc_set, buf, sizeof (float) * CNT, 0);
 
   VkCommandPool commandpool;
   commandpool = create_command_pool (device, qfam);
 
-  VkShaderModule shader;
-  {
-    struct filemap compshadercode;
-    filemap.open (&compshadercode, "./double.comp.spv", O_RDONLY, MAP_SHARED, PROT_READ, 0, 0);
-    shader = create_shader_module (device, compshadercode.d, compshadercode.fsize);
-    filemap.close (&compshadercode);
-  }
-
   VkPipeline pipeline;
   VkPipelineLayout ppl_lay;
-  pipeline = create_compute_pipeline (device, shader, 1, (VkDescriptorSetLayout[1]){desc_set_layout}, &ppl_lay);
+  {
+    VkShaderModule shader;
+    {
+      struct filemap compshadercode;
+      filemap.open (&compshadercode, "./myexp.comp.spv", O_RDONLY, MAP_SHARED, PROT_READ, 0, 0);
+      shader = create_shader_module (device, compshadercode.d, compshadercode.fsize);
+      filemap.close (&compshadercode);
+    }
+
+    pipeline = create_compute_pipeline (device, shader, 1, (VkDescriptorSetLayout[1]){desc_set_layout}, &ppl_lay);
+    vkDestroyShaderModule (device, shader, NULL);
+  }
 
   VkCommandBuffer cmdbuf;
   cmdbuf = create_command_buffer (device, commandpool);
@@ -78,6 +78,7 @@ main (void)
     si.pCommandBuffers = &cmdbuf;
     si.waitSemaphoreCount = 0;
     si.signalSemaphoreCount = 0;
+//    for (;;)
     if (vkQueueSubmit (queue, 1, &si, VK_NULL_HANDLE) != VK_SUCCESS)
       errx (-1, "failed to submit command buffer\n");
   }
@@ -85,19 +86,39 @@ main (void)
   if (vkQueueWaitIdle (queue) != VK_SUCCESS)
     errx (-1, "vkQueueWaitIdle\n");
 
-//start print ...
-//
-  memset (data, 0, sizeof (float) * CNT);
+
   if (vkMapMemory (device, devmem, 0, sizeof (float) * CNT, 0, (void**)&mapaddr) != VK_SUCCESS)
     errx (-1, "(%s) failed to map memory\n", __FUNCTION__);
 //  memcpy (data, mapaddr, sizeof (float) * 1024);
 
   for (int i = 0; i < CNT; i++)
-    printf ("%.1f \t", mapaddr[i]);
+  {
+    printf ("%.5e \t", mapaddr[i]);
+	if (i % 4 == 3)
+	  putchar (10);
+	if (i % 12 == 11)
+	  putchar (10);
+  }
 
   vkUnmapMemory (device, devmem);
-//end print ...
+
   putchar (10);
+
+
+  vkDestroyBuffer (device, buf, NULL);
+  vkFreeMemory (device, devmem, NULL);
+  vkDestroyPipeline (device, pipeline, NULL);
+  vkDestroyPipelineLayout (device, ppl_lay, NULL);
+
+  vkFreeCommandBuffers (device, commandpool, 1, &cmdbuf);
+  vkDestroyCommandPool (device, commandpool, NULL);
+
+  vkDestroyDescriptorPool (device, pool, NULL);
+
+//  vkDestroyDevice (device, NULL);
+
+//  vkDestroyInstance (instance, NULL);
+
 
   return 0;
 }
